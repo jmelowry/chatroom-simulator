@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import time
 from ollama import chat
-from config import CHAT_CONFIG, OLLAMA_API_SETTINGS, DURATION_MINUTES
+from .config import CHAT_CONFIG, OLLAMA_API_SETTINGS, DURATION_MINUTES
 
 def simulate_random_conversation(characters, topics, settings, duration_minutes, verbose=False):
     print("Simulating Random Conversation in a 90's style chat room...\n")
