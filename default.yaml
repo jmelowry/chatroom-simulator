@@ -1,0 +1,20 @@
+chatrooms:
+  - name: Quantum Physics Enthusiasts
+    topics:
+      - Quantum entanglement
+      - Quantum computing
+    settings:
+      allowed_characters: [Alice, Bob]
+      default_response_length: medium
+      max_conversation_turns: 20
+      duration_minutes: 30
+    model_settings:
+      model_name: llama2
+
+characters:
+  - name: Alice
+    bio: A curious adventurer
+    age: 30
+  - name: Bob
+    bio: A meticulous scientist
+    age: 40
