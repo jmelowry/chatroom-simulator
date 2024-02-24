@@ -10,7 +10,6 @@ chatrooms:
       duration_minutes: 30
     model_settings:
       model_name: llama2
-
 characters:
   - name: Alice
     bio: A curious adventurer
