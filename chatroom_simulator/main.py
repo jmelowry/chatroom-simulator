@@ -1,46 +1,53 @@
-from datetime import datetime, timedelta
-import time
-from ollama import chat
-from .config import CHAT_CONFIG, OLLAMA_API_SETTINGS, DURATION_MINUTES
+import argparse
+import yaml
 
-def simulate_random_conversation(characters, topics, settings, duration_minutes, verbose=False):
-    print("Simulating Random Conversation in a 90's style chat room...\n")
-    
-    end_time = datetime.now() + timedelta(minutes=duration_minutes)
+# Assuming the Character and Chatroom classes are defined in separate modules and imported here
+from chatroom_simulator.chatroom import Chatroom
+from chatroom_simulator.character import Character
+
+def load_configuration(file_path):
+    """Load YAML configuration from the given file path."""
     try:
-        for topic in topics:
-            print(f"Topic: {topic['topic']}\n")
-            conversation_history = []
-
-            while datetime.now() < end_time:
-                for character in characters:
-                    # Use the last few messages for context
-                    context = " ".join(conversation_history[-2:])
-                    prompt = f"Given the topic '{topic['topic']}', if {character['name']} were typing a message in a chat room right now, what would they type? Keep it casual and feel free to use emojis. Previous messages: {context}"
-
-                    # Call the chat function with the refined prompt
-                    response = chat(OLLAMA_API_SETTINGS["model_name"], messages=[{'role': 'user', 'content': prompt}], stream=False)
-                    message_content = response['message']['content'] if 'message' in response else "No response."
-                    
-                    # Print the direct message without narrative descriptions
-                    print(f"{character['name']}: {message_content}\n")
-                    
-                    # Update conversation history with the new message
-                    conversation_history.append(f"{character['name']}: {message_content}")
-
-                    time.sleep(1)  # Simulate typing delay
-
-                    if datetime.now() >= end_time:
-                        break
-
-                if datetime.now() >= end_time:
-                    break
-
-    except KeyboardInterrupt:
-        print("\nConversation ended by user.")
+        with open(file_path, 'r') as file:
+            return yaml.safe_load(file)
+    except FileNotFoundError:
+        print(f"Error: Configuration file '{file_path}' not found.")
+        exit(1)
+    except yaml.YAMLError as exc:
+        print(f"Error parsing YAML configuration: {exc}")
+        exit(1)
 
 def main():
-    simulate_random_conversation(CHAT_CONFIG["characters"], CHAT_CONFIG["discussion_topics"], CHAT_CONFIG["global_settings"], DURATION_MINUTES, verbose=True)
+    parser = argparse.ArgumentParser(description="Chatroom Simulator")
+    parser.add_argument("-f", "--file", type=str, default="default.yaml", help="Path to the configuration file.")
+    args = parser.parse_args()
+
+    # Load the YAML configuration
+    config = load_configuration(args.file)
+
+    # Load global characters into a dictionary
+    characters_dict = {char['name']: Character(**char) for char in config.get('characters', [])}
+
+    # Initialize chatrooms from the configuration
+    chatrooms = []
+    for chatroom_config in config.get('chatrooms', []):
+        # Fetch characters for this chatroom based on the names listed in settings (if 'allowed_characters' is used)
+        # If 'allowed_characters' isn't part of your YAML structure, adjust accordingly
+        chatroom_characters = [characters_dict[name] for name in chatroom_config.get('settings', {}).get('allowed_characters', characters_dict.keys())]
+
+        # Create the Chatroom instance with the loaded configuration and associated characters
+        chatroom = Chatroom(
+            name=chatroom_config['name'],
+            topics=chatroom_config['topics'],
+            characters=chatroom_characters,
+            settings=chatroom_config.get('settings', {}),
+            model_settings=chatroom_config.get('model_settings', {})
+        )
+        chatrooms.append(chatroom)
+
+    # Initiate conversations in each chatroom
+    for chatroom in chatrooms:
+        chatroom.simulate_conversation()
 
 if __name__ == "__main__":
     main()
