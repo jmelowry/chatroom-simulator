@@ -25,21 +25,27 @@ def main():
     # Load the YAML configuration
     config = load_configuration(args.file)
 
-    # Initialize chatroom(s) from the configuration
+    # Load global characters into a dictionary
+    characters_dict = {char['name']: Character(**char) for char in config.get('characters', [])}
+
+    # Initialize chatrooms from the configuration
     chatrooms = []
     for chatroom_config in config.get('chatrooms', []):
-        # Initialize characters for this chatroom
-        characters = [Character(**char_data) for char_data in chatroom_config.get('characters', [])]
-        
-        # Create the Chatroom instance with the loaded configuration and characters
-        chatroom = Chatroom(name=chatroom_config.get('name'),
-                            topics=chatroom_config.get('topics'),
-                            characters=characters,
-                            settings=chatroom_config.get('settings'),
-                            model_settings=chatroom_config.get('model_settings'))
+        # Fetch characters for this chatroom based on the names listed in settings (if 'allowed_characters' is used)
+        # If 'allowed_characters' isn't part of your YAML structure, adjust accordingly
+        chatroom_characters = [characters_dict[name] for name in chatroom_config.get('settings', {}).get('allowed_characters', characters_dict.keys())]
+
+        # Create the Chatroom instance with the loaded configuration and associated characters
+        chatroom = Chatroom(
+            name=chatroom_config['name'],
+            topics=chatroom_config['topics'],
+            characters=chatroom_characters,
+            settings=chatroom_config.get('settings', {}),
+            model_settings=chatroom_config.get('model_settings', {})
+        )
         chatrooms.append(chatroom)
-    
-    # Simulate conversations in each chatroom
+
+    # Initiate conversations in each chatroom
     for chatroom in chatrooms:
         chatroom.simulate_conversation()
 

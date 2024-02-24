@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import random
+import time
+
 class Chatroom:
     def __init__(self, name, topics, characters, settings, model_settings):
         self.name = name
@@ -11,9 +14,13 @@ class Chatroom:
     def simulate_conversation(self):
         print(f"Starting conversation in chatroom: {self.name}")
         print(f"Topics: {', '.join(self.topics)}")
-        print(f"Characters: {', '.join([char.name for char in self.characters])}")
-        # Placeholder for simulation logic
-        print("Simulating conversation... (placeholder)")
-
-    def __repr__(self):
-        return f"<Chatroom {self.name}>"
+        for topic in self.topics:
+            # Announce the topic to discuss
+            print(f"Chatroom topic announced: {topic}")
+            for character in self.characters:
+                # Generate a random delay between 2 and 5 seconds
+                delay = random.randint(2, 5)
+                time.sleep(delay)  # Pause execution for a random duration
+                
+                # Simulate the character speaking
+                character.speak(f"excited to discuss {topic}")
