@@ -78,10 +78,15 @@ build_image() {
     echo "Image $image_tag has been built successfully."  
 }
 
-start_kind_cluster() {  
-    local config_file="$1"  
-    kind create cluster --config "$config_file"  
-    echo "Kind cluster has been set up successfully."  
+start_kind_cluster() {
+    local config_file="$1"
+    # Check if a Kind cluster by the name 'kind' already exists
+    if kind get clusters | grep -q "^kind$"; then
+        print_yellow "Kind cluster 'kind' already exists. Skipping creation."
+    else
+        kind create cluster --config "$config_file" || { echo "Failed to create Kind cluster"; exit 1; }
+        print_green "Kind cluster has been set"
+    fi
 }
 
 deploy_project() {  
@@ -89,16 +94,16 @@ deploy_project() {
     check_and_install_homebrew  
     
     echo "Checking Docker installation..."  
-    check_docker  
+    check_docker
     
     echo "Installing dependencies listed in Brewfile..."  
     install_dependencies_with_brewfile  
     
     echo "Creating the Kind cluster..."  
-    start_kind_cluster "deployment/k8s-config/kind-config.yaml"  
+    start_kind_cluster "./k8s-config/kind-config.yaml"  
     
     echo "Building Docker image for chatroom simulator..."  
-    build_image "docker/Dockerfile" "chatroom_simulator:latest"
+    build_image "./docker/app" "chatroom_simulator:latest"
 
     echo "Project deployment complete."
 }  
