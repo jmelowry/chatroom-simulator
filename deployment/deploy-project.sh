@@ -84,11 +84,23 @@ start_kind_cluster() {
     echo "Kind cluster has been set up successfully."  
 }
 
-deploy_project() {
-    check_and_install_homebrew
-    check_docker
-    install_dependencies_with_brewfile
-    print_green "Project deployment complete."
-}
+deploy_project() {  
+    echo "Checking and installing Homebrew..."  
+    check_and_install_homebrew  
+    
+    echo "Checking Docker installation..."  
+    check_docker  
+    
+    echo "Installing dependencies listed in Brewfile..."  
+    install_dependencies_with_brewfile  
+    
+    echo "Creating the Kind cluster..."  
+    start_kind_cluster "deployment/k8s-config/kind-config.yaml"  
+    
+    echo "Building Docker image for chatroom simulator..."  
+    build_image "docker/Dockerfile" "chatroom_simulator:latest"
+
+    echo "Project deployment complete."
+}  
 
 deploy_project
