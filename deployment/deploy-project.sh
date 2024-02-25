@@ -102,8 +102,10 @@ deploy_project() {
     echo "Creating the Kind cluster..."  
     start_kind_cluster "./k8s-config/kind-config.yaml"  
     
-    echo "Building Docker image for chatroom simulator..."  
-    build_image "./docker/app" "chatroom_simulator:latest"
+    echo "Building Docker image for chatroom simulator..."
+    cd ../app || { echo "Failed to change directory"; exit 1; }
+    build_image ". "chatroom_simulator:latest"
+    cd ../deployment || { echo "Failed to change directory"; exit 1; }
 
     echo "Project deployment complete."
 }  
