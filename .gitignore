@@ -1,4 +1,5 @@
 *.pyc
 __pycache__/
 venv/
-*.egg-info/
+*.egg-info/*
+Brewfile.lock.json
