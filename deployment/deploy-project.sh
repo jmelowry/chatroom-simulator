@@ -54,6 +54,17 @@ check_docker() {
     fi
 }
 
+check_docker_daemon() {
+    if ! docker info &> /dev/null; then
+        print_red "The Docker daemon is not running."
+        print_yellow "Please start the Docker daemon before proceeding, then press any key to continue..."
+        read -n 1 -s -r
+        check_docker_daemon
+    else
+        print_green "The Docker daemon is running."
+    fi
+}
+
 list_brewfile_dependencies() {
     print_yellow "Dependencies listed in Brewfile:"
     while read line; do
@@ -89,12 +100,21 @@ start_kind_cluster() {
     fi
 }
 
-deploy_project() {  
+load_image_into_kind_cluster() {
+    local image_tag="$1"
+    kind load docker-image "$image_tag" --name chatroom-simulator || { echo "Failed to load image into Kind cluster"; exit 1; }
+    print_green "Image $image_tag has been loaded into the Kind cluster"
+}
+
+deploy_project() { 
     echo "Checking and installing Homebrew..."  
     check_and_install_homebrew  
     
     echo "Checking Docker installation..."  
     check_docker
+
+    echo "Checking Docker daemon..."  
+    check_docker_daemon
     
     echo "Installing dependencies listed in Brewfile..."  
     install_dependencies_with_brewfile  
@@ -104,10 +124,16 @@ deploy_project() {
     
     echo "Building Docker image for chatroom simulator..."
     cd ../app || { echo "Failed to change directory"; exit 1; }
-    build_image ". "chatroom_simulator:latest"
+    build_image . "chatroom_simulator:latest"
     cd ../deployment || { echo "Failed to change directory"; exit 1; }
 
+    echo "Loading the app image into the Kind cluster..."
+    load_image_into_kind_cluster "chatroom_simulator:latest"
+
+    echo "deploying app to cluster"
+    kubectl apply -f ../k8s-config/deployment.yaml --context kind-chatroom-simulator
+
     echo "Project deployment complete."
-}  
+}
 
 deploy_project
