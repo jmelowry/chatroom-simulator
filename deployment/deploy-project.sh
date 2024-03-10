@@ -91,12 +91,20 @@ build_image() {
 
 start_kind_cluster() {
     local config_file="$1"
-    # Check if a Kind cluster by the name 'kind' already exists
-    if kind get clusters | grep -q "^kind$"; then
-        print_yellow "Kind cluster 'kind' already exists. Skipping creation."
+    # Use 'yq' to extract the cluster name from the YAML configuration file
+    local cluster_name=$(yq e '.name' "$config_file")
+
+    # If 'yq' does not find a name, default to 'kind'
+    if [ -z "$cluster_name" ]; then
+        cluster_name="kind"
+    fi
+
+    # Check if a Kind cluster with the extracted name already exists
+    if kind get clusters | grep -q "^$cluster_name$"; then
+        print_yellow "Kind cluster '$cluster_name' already exists. Skipping creation."
     else
         kind create cluster --config "$config_file" || { echo "Failed to create Kind cluster"; exit 1; }
-        print_green "Kind cluster has been set"
+        print_green "Kind cluster '$cluster_name' has been set"
     fi
 }
 
